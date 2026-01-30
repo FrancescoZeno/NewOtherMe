@@ -1,7 +1,7 @@
 import Phaser from 'phaser';
 import { COLORS, GAME_WIDTH, GAME_HEIGHT, BATTLE_CONFIG } from '@/config/gameConfig';
 import { BattleState, BattleActionType, BATTLE_ACTIONS, BattleResult } from '@/types/combat';
-import { EnemyConfig, EnemyAttack } from '@/types/entities';
+import { EnemyConfig } from '@/types/entities';
 
 export class BattleManager {
     private scene: Phaser.Scene;
@@ -12,8 +12,11 @@ export class BattleManager {
     private enemySprite: Phaser.GameObjects.Image;
     private enemyNameText: Phaser.GameObjects.Text;
     private enemyHpBar: Phaser.GameObjects.Rectangle;
+    private enemyHpBarBg: Phaser.GameObjects.Rectangle;
     private playerHpBar: Phaser.GameObjects.Rectangle;
+    private playerHpBarBg: Phaser.GameObjects.Rectangle;
     private temptationBar: Phaser.GameObjects.Rectangle;
+    private temptationBarBg: Phaser.GameObjects.Rectangle;
     private messageText: Phaser.GameObjects.Text;
     private menuItems: Phaser.GameObjects.Text[] = [];
     private selectedIndex = 0;
@@ -48,46 +51,62 @@ export class BattleManager {
     private createUI(): void {
         const bg = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2, GAME_WIDTH, GAME_HEIGHT, 0x0a0a0a, 0.98);
 
-        const battleArea = this.scene.add.rectangle(GAME_WIDTH / 2, 180, GAME_WIDTH - 80, 280, COLORS.darkBlue);
-        battleArea.setStrokeStyle(3, COLORS.purple);
+        // TOP PANEL - Player HP and Temptation (sinistra)
+        const topPanelPlayer = this.scene.add.rectangle(160, 55, 280, 80, 0x1a1a1a);
+        topPanelPlayer.setStrokeStyle(2, COLORS.gold);
 
-        this.enemySprite = this.scene.add.image(GAME_WIDTH / 2, 180, 'dario');
-        this.enemySprite.setScale(8);
-
-        this.enemyNameText = this.scene.add.text(GAME_WIDTH / 2, 50, '', {
+        const playerNameLabel = this.scene.add.text(40, 25, 'GENNARO', {
             fontFamily: 'monospace',
-            fontSize: '24px',
-            color: '#ffffff',
-        }).setOrigin(0.5);
-
-        this.scene.add.rectangle(GAME_WIDTH / 2, 85, 220, 18, 0x333333);
-        this.enemyHpBar = this.scene.add.rectangle(GAME_WIDTH / 2 - 108, 85, 216, 14, COLORS.red);
-        this.enemyHpBar.setOrigin(0, 0.5);
-
-        const playerPanel = this.scene.add.rectangle(150, GAME_HEIGHT - 200, 260, 100, 0x1a1a1a);
-        playerPanel.setStrokeStyle(2, COLORS.gold);
-
-        this.scene.add.text(40, GAME_HEIGHT - 235, 'GENNARO', {
-            fontFamily: 'monospace',
-            fontSize: '18px',
+            fontSize: '16px',
             color: '#e0d5c0',
         });
 
-        this.scene.add.text(40, GAME_HEIGHT - 210, 'HP', {
-            fontFamily: 'monospace', fontSize: '14px', color: '#888888',
+        const hpLabel = this.scene.add.text(40, 50, 'HP', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#888888',
         });
-        this.scene.add.rectangle(120, GAME_HEIGHT - 205, 140, 14, 0x333333);
-        this.playerHpBar = this.scene.add.rectangle(52, GAME_HEIGHT - 205, 136, 10, 0x00aa00);
+        this.playerHpBarBg = this.scene.add.rectangle(150, 53, 160, 14, 0x333333);
+        this.playerHpBar = this.scene.add.rectangle(72, 53, 156, 10, 0x00aa00);
         this.playerHpBar.setOrigin(0, 0.5);
 
-        this.scene.add.text(40, GAME_HEIGHT - 185, 'Tentazione', {
-            fontFamily: 'monospace', fontSize: '12px', color: '#888888',
+        const temptLabel = this.scene.add.text(40, 72, 'Tentazione', {
+            fontFamily: 'monospace',
+            fontSize: '11px',
+            color: '#888888',
         });
-        this.scene.add.rectangle(160, GAME_HEIGHT - 180, 100, 12, 0x333333);
-        this.temptationBar = this.scene.add.rectangle(111, GAME_HEIGHT - 180, 0, 8, COLORS.purple);
+        this.temptationBarBg = this.scene.add.rectangle(180, 75, 120, 12, 0x333333);
+        this.temptationBar = this.scene.add.rectangle(121, 75, 0, 8, COLORS.purple);
         this.temptationBar.setOrigin(0, 0.5);
 
-        this.messageText = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 280, '', {
+        // TOP PANEL - Enemy HP (destra)
+        const topPanelEnemy = this.scene.add.rectangle(GAME_WIDTH - 160, 55, 280, 80, 0x1a1a1a);
+        topPanelEnemy.setStrokeStyle(2, COLORS.red);
+
+        this.enemyNameText = this.scene.add.text(GAME_WIDTH - 280, 25, '', {
+            fontFamily: 'monospace',
+            fontSize: '16px',
+            color: '#ff6666',
+        });
+
+        const enemyHpLabel = this.scene.add.text(GAME_WIDTH - 280, 50, 'HP', {
+            fontFamily: 'monospace',
+            fontSize: '12px',
+            color: '#888888',
+        });
+        this.enemyHpBarBg = this.scene.add.rectangle(GAME_WIDTH - 110, 53, 180, 14, 0x333333);
+        this.enemyHpBar = this.scene.add.rectangle(GAME_WIDTH - 198, 53, 176, 10, COLORS.red);
+        this.enemyHpBar.setOrigin(0, 0.5);
+
+        // BATTLE AREA
+        const battleArea = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, GAME_WIDTH - 80, 320, COLORS.darkBlue);
+        battleArea.setStrokeStyle(3, COLORS.purple);
+
+        this.enemySprite = this.scene.add.image(GAME_WIDTH / 2, GAME_HEIGHT / 2 - 30, 'dario');
+        this.enemySprite.setScale(8);
+
+        // MESSAGE BOX
+        this.messageText = this.scene.add.text(GAME_WIDTH / 2, GAME_HEIGHT - 220, '', {
             fontFamily: 'monospace',
             fontSize: '18px',
             color: '#ffffff',
@@ -95,16 +114,17 @@ export class BattleManager {
             wordWrap: { width: 600 },
         }).setOrigin(0.5);
 
-        const menuBg = this.scene.add.rectangle(GAME_WIDTH - 180, GAME_HEIGHT - 200, 280, 120, 0x1a1a1a);
+        // MENU (bottom)
+        const menuBg = this.scene.add.rectangle(GAME_WIDTH / 2, GAME_HEIGHT - 80, GAME_WIDTH - 60, 120, 0x1a1a1a);
         menuBg.setStrokeStyle(2, COLORS.gold);
 
         const actions: BattleActionType[] = ['fight', 'resist', 'item', 'flee'];
         actions.forEach((action, index) => {
-            const x = GAME_WIDTH - 300 + (index % 2) * 140;
-            const y = GAME_HEIGHT - 240 + Math.floor(index / 2) * 45;
+            const x = GAME_WIDTH / 2 - 200 + (index % 2) * 200;
+            const y = GAME_HEIGHT - 115 + Math.floor(index / 2) * 40;
             const text = this.scene.add.text(x, y, BATTLE_ACTIONS[action].name, {
                 fontFamily: 'monospace',
-                fontSize: '18px',
+                fontSize: '20px',
                 color: '#e0d5c0',
             });
             text.setData('action', action);
@@ -112,11 +132,12 @@ export class BattleManager {
         });
 
         this.container.add([
-            bg, battleArea, this.enemySprite, this.enemyNameText,
-            this.scene.add.rectangle(GAME_WIDTH / 2, 85, 220, 18, 0x333333),
-            this.enemyHpBar, playerPanel,
-            this.scene.add.text(40, GAME_HEIGHT - 235, 'GENNARO', { fontFamily: 'monospace', fontSize: '18px', color: '#e0d5c0' }),
-            this.playerHpBar, this.temptationBar, this.messageText, menuBg,
+            bg,
+            topPanelPlayer, playerNameLabel, hpLabel, this.playerHpBarBg, this.playerHpBar,
+            temptLabel, this.temptationBarBg, this.temptationBar,
+            topPanelEnemy, this.enemyNameText, enemyHpLabel, this.enemyHpBarBg, this.enemyHpBar,
+            battleArea, this.enemySprite,
+            this.messageText, menuBg,
             ...this.menuItems,
         ]);
     }
@@ -140,9 +161,9 @@ export class BattleManager {
     }
 
     private updateUI(): void {
-        this.playerHpBar.width = 136 * (this.state.playerHp / this.state.playerMaxHp);
-        this.enemyHpBar.width = 216 * (this.state.enemyHp / this.state.enemyMaxHp);
-        this.temptationBar.width = 96 * (this.state.temptation / 100);
+        this.playerHpBar.width = 156 * (this.state.playerHp / this.state.playerMaxHp);
+        this.enemyHpBar.width = 176 * (this.state.enemyHp / this.state.enemyMaxHp);
+        this.temptationBar.width = 118 * (this.state.temptation / 100);
         this.updateMenuSelection();
     }
 
